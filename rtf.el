@@ -1,9 +1,11 @@
-;;; rtf.el --- Emacs reader/write for RTF files.
+;;; rtf.el --- Emacs reader/writer for RTF files.
 
-(require 'cl)
 (require 'format)
 (require 'table)
 (require 'hex-util)
+
+(eval-when-compile 
+  (require 'cl))
 
 (defgroup rtf nil
   "Read and save files in text/rtf format."
@@ -163,6 +165,7 @@ properties and fresh mark is false."
 (defconst rtf-language-alist
   '((#x400 . nil)
     (#x408 . cp1253)
+    (#x40D . cp1255)
     (#x409 . cp1251)
     (#x412 . cp949)
     (#x419 . cp1251)
@@ -1005,6 +1008,7 @@ properties and fresh mark is false."
 (rtf-define-control shad 0
   (rtf-set-property rtf-char-props :foreground "#696969"))
 
+
 
 ;;;  Display Properties
 (defvar rtf-display-props (rtf-make-properties-stack))
@@ -1333,7 +1337,8 @@ properties and fresh mark is false."
 (rtf-define-destination field
   (let ((beg (point))
 	(formatter (lambda (beg end)
-		     (message "Field: %d %d" beg end))))
+		     ; (message "Field: %d %d" beg end)
+		     )))
     (rtf-with-group
       (rtf-dispatch #'rtf-reinsert-formatted))
     (and formatter
