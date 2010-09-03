@@ -1,10 +1,29 @@
 ;;; rtf.el --- Emacs reader/writer for RTF files.
 
+;; Copyright (C) 2010 Eduard Wiebe <pusto@web.de>
+
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 2, or (at your option)
+;; any later version.
+
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to
+;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
+
+;;; Code:
+
 (require 'format)
 (require 'table)
 (require 'hex-util)
 
-(eval-when-compile 
+(eval-when-compile
   (require 'cl))
 
 (defgroup rtf nil
@@ -201,7 +220,7 @@ properties and fresh mark is false."
     (mac  . mac-roman)
     (pc   . cp437)
     (pca  . cp850)))
- 
+
 (defvar rtf-coding-system 'ansi)
 (make-variable-buffer-local 'rtf-coding-system)
 (put 'rtf-coding-system 'permanent-local t)
@@ -260,7 +279,7 @@ properties and fresh mark is false."
 	   (rtf-perform-control-action)
 	   (delete-char -1))
 	  (t (delete-char 1)))))
-  
+
 (rtf-define-control u 0
   (rtf-insert-unicode-char param))
 
@@ -324,7 +343,7 @@ properties and fresh mark is false."
 
 (rtf-define-control rquote nil
   (rtf-insert-formatted ?\'))
-  
+
 (rtf-define-control bullet nil
   (rtf-insert-formatted ?õŒƒ›))
 
@@ -481,7 +500,7 @@ properties and fresh mark is false."
 	(fvalidmac fvaliddos fvalidntfs fvalidhpfs fnetwork fnonfilesys) nil
       (push (rtf-file-sources file) name))
     (rtf-with-group
-      (rtf-dispatch #'rtf-discard)))  
+      (rtf-dispatch #'rtf-discard)))
   (setq rtf-file-table (nreverse rtf-file-table)))
 
 (defun rtf-write-file-table (buffer)
@@ -649,8 +668,8 @@ properties and fresh mark is false."
 ;; 	      (insert (format "" it)))
 ;; 	     ((rtf-style-sheet-next style)
 ;; 	      (insert (format "\\snext%d" it))))
-	    
-	     
+
+
 	    (let ((type (rtf-style-sheet-type style)))
 	      (when type
 		(and (eq (car type) 'cs) (insert "\\*"))
@@ -680,7 +699,7 @@ properties and fresh mark is false."
 
 ;;  Track Changes (revision marks)
 
-;;  RSID 
+;;  RSID
 
 ;;;  User Protection Info
 (rtf-defvar rtf-user-list nil t
@@ -845,7 +864,7 @@ properties and fresh mark is false."
     ((alpha-uppercase) (format "%c" (+ ?A (1- num))))
     ((alpha-lowercase) (format "%c" (+ ?a (1- num))))
     (t (number-to-string num))))
-			
+
 (rtf-defvar rtf-footnote-restart 'continue t
   "Restart footnode mode style. Possible values are 'continue
   'page and 'section.")
@@ -912,7 +931,7 @@ properties and fresh mark is false."
     (rtf-define-control bin        0   (forward-char param))
     (rtf-define-control picscalex  100 (setq x-scale param))
     (rtf-define-control picscaley  100 (setq y-scale param))
-    
+
     ;;  Read image data
     (rtf-with-group
       (rtf-dispatch hex-to-byte))
@@ -963,7 +982,7 @@ properties and fresh mark is false."
 (rtf-define-control plain nil
   (rtf-reset-properties rtf-char-props)
   (rtf-set-language rtf-default-lang))
-	       
+
 (rtf-define-control b 1
   (rtf-toggle-property rtf-char-props param :weight 'bold 'normal))
 
@@ -1033,7 +1052,7 @@ properties and fresh mark is false."
 (rtf-define-control dn 6
   ;; XXX: calculate raise factor properly
   (rtf-set-property rtf-display-props 'raise (- (* 0.1 param))))
-  
+
 (rtf-define-control nosupersub nil
   (rtf-set-property rtf-display-props 'raise nil)
   (rtf-set-property rtf-display-props 'height nil))
@@ -1054,7 +1073,7 @@ properties and fresh mark is false."
   ;; (rtf-apply-properties rtf-section-props #'rtf-section-format-last)
   (let ((cols  (cadr (rtf-get-property rtf-section-props 'columns)))
 	(brk   (cadr (rtf-get-property rtf-section-props 'break))))
-    
+
     ;; set default values
     (or cols (setq cols 1))
 
@@ -1062,7 +1081,7 @@ properties and fresh mark is false."
     ;;       (message "===== COLS: %d" cols)
     ;;       (dolist (start rtf-paragraphs-start)
     ;; 	(message "ON: %S" start)))
-    
+
     (rtf-reset-footnote-number 'section)))
 
 (rtf-define-control sectd nil
@@ -1136,17 +1155,17 @@ properties and fresh mark is false."
 	(columns       (cadr (rtf-get-property rtf-section-props 'columns)))
 	(fill-column   fill-column)
 	(last-par-start (car rtf-paragraphs-start)))
-    
+
     ;; set default margin values
     (or left-indent  (setq left-indent  0))
     (or right-indent (setq right-indent 0))
     (or space-after  (setq space-after  0))
     (or space-before (setq space-before 0))
-    
+
     (if in-table
 	(rtf-register-table-start last-par-start)
       (rtf-format-last-table))
-    
+
     (when (> (point) last-par-start)
       (goto-char last-par-start)
       (rtf-insert-space 'vertical space-before)
@@ -1234,7 +1253,7 @@ properties and fresh mark is false."
       (dolist (pos rtf-cell-pos-stack)
 	(goto-char pos)
 	(newline))
-	
+
 ;;       (and
 ;;        (re-search-backward rtf-table-row-sep rtf-table-start 'noerror)
 ;;        (goto-char (match-end 0)))
@@ -1354,7 +1373,7 @@ properties and fresh mark is false."
 ;;;  Tabs
 (defstruct rtf-tab
   width					; in twips
-  position				; in twips from left margin 
+  position				; in twips from left margin
   kind					; decimal, centered, flush-right
   leader)
 
@@ -1432,7 +1451,7 @@ properties and fresh mark is false."
 	 (rtf-apply-properties rtf-char-props
 			       #'rtf-add-char-properties
 			       len))
-  
+
     (and (rtf-fresh-properties-p rtf-display-props)
 	 (rtf-apply-properties rtf-display-props
 			       #'rtf-apply-display-properties
@@ -1486,7 +1505,7 @@ properties and fresh mark is false."
 (defun rtf-write-page-info (origbuf)
   (let ((rtf-page (buffer-local-value 'rtf-page origbuf)))
     (when rtf-page
-      (insert 
+      (insert
        (format "\\paperw%d" (rtf-page-width rtf-page))
        (format "\\paperh%d" (rtf-page-height rtf-page))
        (format "\\margl%d"  (rtf-page-margin-left rtf-page))
@@ -1497,7 +1516,7 @@ properties and fresh mark is false."
 
 (rtf-define-control paperw 12240
   (setf (rtf-page-width rtf-page) param))
-  
+
 (rtf-define-control paperh 15840
   (setf (rtf-page-height rtf-page) param))
 
@@ -1538,7 +1557,7 @@ properties and fresh mark is false."
 (rtf-define-control pagebb nil
   (rtf-set-property rtf-paragraph-props 'break-page t))
 
-;;;  Reader 
+;;;  Reader
 (defun rtf-read (regexp)
   (when (looking-at regexp)
     (prog1 (match-string-no-properties 1)
@@ -1571,7 +1590,7 @@ properties and fresh mark is false."
     (parse-partial-sexp (point) (point-max) -1)
     (backward-char)
     (rtf-read-region beg (point))))
-	
+
 (defun rtf-read-control-word ()
   (let ((control-regexp "\\([-_'*{}\\\n\r:|~ ]\\|[[:alpha:]]+\\)"))
     (intern (rtf-read control-regexp))))
@@ -1592,27 +1611,27 @@ properties and fresh mark is false."
 	(rtf-read "[\r\n]+")
 	(delete-char 1)
 	(setq word (rtf-read-control-word)))
-    
+
       ;; get control table entry
       (setq control  (cdr (assq word rtf-control-table)))
       (setq defparam (nth 0 control))
       (setq action   (nth 1 control))
       (setq special  (nth 2 control))
-    
+
       ;; read parameter for control word
       (cond ((not action)
 	     (setq action rtf-default-control-action)
 	     (setq param (rtf-read param-regexp)))
 	    (defparam
 	      (setq param (or (rtf-read param-regexp) defparam))))
-      
+
       (and (stringp param)
 	   (setq param (string-to-number param)))
       ;; delete optional trailing whitespace,
       ;; because this is not a part of control word
       (unless special
 	(and (eq (following-char) ?\ ) (delete-char 1)))
-      
+
       (if (and optional (not action))
 	  (rtf-with-group
 	    (rtf-dispatch #'rtf-discard t))
@@ -1711,10 +1730,10 @@ properties and fresh mark is false."
 	       (rtf-write-image prop))
 	      (t (forward-char)))
 	(setq pos (next-single-property-change (point) 'display))))))
-    
-	       
+
+
 ;;;   Format Interface
-(add-to-list 'format-alist 
+(add-to-list 'format-alist
 	     '(text/rtf "doc" "{\\\\rtf" rtf-decode rtf-encode t nil nil))
 
 (defvar rtf-trans
@@ -1791,7 +1810,7 @@ properties and fresh mark is false."
       (goto-char beg)
       (delete-to-left-margin)
       (unjustify-region)
-      
+
       (format-replace-strings
        '(("\\" . "\\\\")
 	 ("{"  . "\\{")
@@ -1803,7 +1822,7 @@ properties and fresh mark is false."
       (while (not (eobp))
 	(rtf-insert-properties (text-properties-at (point)))
 	(goto-char (or (next-property-change (point)) (point-max))))
-      
+
       ;; encode all paragraphs
       (goto-char (point-max))
       (let ((pos (point)))
@@ -1811,7 +1830,7 @@ properties and fresh mark is false."
 	  (backward-paragraph)
 	  (rtf-encode-paragraph (point) pos)
 	  (setq pos (point))))
-      
+
       ;; first of all write static data
       (goto-char (point-min))
       (rtf-write-prolog origbuf)
