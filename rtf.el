@@ -186,12 +186,14 @@ properties and fresh mark is false."
     (#x408 . cp1253)
     (#x40D . cp1255)
     (#x409 . cp1251)
+    (#x411 . cp932)
     (#x412 . cp949)
     (#x419 . cp1251)
     (#x804 . gb2312)))
 
 (defconst rtf-coding-system-spec
   '((cp949  . 2)
+    (cp932  . 2)
     (cp950  . 2)
     (gb2312 . 2)))
 
