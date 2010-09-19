@@ -1300,21 +1300,19 @@ properties and fresh mark is false."
 
 (defvar rtf-bookmark-alist nil)
 (make-variable-buffer-local 'rtf-bookmark-alist)
-(put 'rtf-bookmark-list 'permanent-local t)
+(put 'rtf-bookmark-alist 'permanent-local t)
 
 (rtf-define-destination bkmkstart
   (let ((rtf-color-table nil)
-	(bkm (make-rtf-bookmark))
-	name)
+	(bkm (make-rtf-bookmark)))
     (rtf-define-control bkmkcolf 0 (setf (rtf-bookmark-first-col bkm) param))
     (rtf-define-control bkmkcoll 0 (setf (rtf-bookmark-last-col  bkm) param))
     (setf (rtf-bookmark-pos bkm) (point))
-    (setq name (intern (rtf-read-group-contents)))
-    (push (cons name bkm) rtf-bookmark-alist)))
+    (push (cons (rtf-read-group-contents) bkm) rtf-bookmark-alist)))
 
 (rtf-define-destination bkmkstop
   (let* ((name (intern (rtf-read-group-contents)))
-	 (bkm  (cdr (assq name rtf-bookmark-alist))))
+	 (bkm  (cdr (assoc name rtf-bookmark-alist))))
     (and bkm
 	 (setf (rtf-bookmark-content bkm)
 	       (rtf-read-region (rtf-bookmark-pos bkm)
@@ -1355,15 +1353,59 @@ properties and fresh mark is false."
 (rtf-defvar rtf-fields nil t
   "List of document fields.")
 
+(defun rtf-install-field-REF (field beg end)
+  (make-text-button
+   beg end
+   'follow-link t
+   'help-echo (concat "Go to: " (cadr (rtf-field-instruction field)))
+   'action #'rtf-field-goto))
+
+(defun rtf-install-field-HYPERLINK (field beg end)
+  (let ((inst (rtf-field-instruction field)))
+    (make-text-button 
+     beg end
+     'follow-link t
+     'help-echo (concat "Link: " (if (string= "\\l" (cadr inst)) (caddr inst) (cadr inst)))
+     'action #'rtf-field-goto)))
+
+(defun rtf-field-goto (button)
+  (let* ((beg (button-start button))
+	 (field (get-text-property beg 'rtf-field))
+	 inst url local)
+    ;; Search for HYPERLINK or REF field, when this is embedded inside
+    ;; another field, e.g. TOC etc.
+    (while (and field (not (member (car (rtf-field-instruction field)) '("HYPERLINK" "REF"))))
+      (setq field (rtf-field-result field)))
+    
+    (when field
+      (setq inst (rtf-field-instruction field))
+      (setq url (cadr inst))
+      (and (string= url "\\l") (setq url (caddr inst)) (setq local t))
+      (and (not local) (equal "REF" (car inst)) (setq local t))
+      (cond (local
+	     (goto-char (rtf-bookmark-pos (cdr (assoc url rtf-bookmark-alist)))))
+	    (t 
+	     (browse-url (cadr (rtf-field-instruction field))))))))
+
+(rtf-define-destination fldinst
+  (setf (rtf-field-instruction (car rtf-fields))
+	(mapcar (lambda (entry) (replace-regexp-in-string "\"" "" entry))
+		(split-string (rtf-read-group-contents) nil t))))
+
 (rtf-define-destination field
   (let ((beg (point))
-	(formatter (lambda (beg end)
-		     ; (message "Field: %d %d" beg end)
-		     )))
-    (rtf-with-group
-      (rtf-dispatch #'rtf-reinsert-formatted))
-    (and formatter
-	 (funcall formatter beg (point)))))
+	(field (make-rtf-field)))
+    (push field rtf-fields)
+    (rtf-with-group (rtf-dispatch #'rtf-reinsert-formatted))
+    (let ((result-fields (get-text-property beg 'rtf-field)))
+      (and result-fields (setf (rtf-field-result field) result-fields))
+      (put-text-property beg (point) 'rtf-field field))
+    (rtf-install-field-handler field beg (point))))
+
+(defun rtf-install-field-handler (field beg end)
+  (let ((field-install (intern (concat "rtf-install-field-" (car (rtf-field-instruction field))))))
+    (and (fboundp field-install)
+	 (funcall field-install field beg end))))
 
 ;;;  Index Entries
 
