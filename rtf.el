@@ -174,6 +174,7 @@ properties and fresh mark is false."
 (defconst rtf-font-charset-alist
   '((0   . cp1252)
     (77  . mac-roman)
+    (128 . cp932)
     (129 . cp949)
     (134 . gb2312)
     (135 . cp950)
