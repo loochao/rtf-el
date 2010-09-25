@@ -470,12 +470,15 @@ properties and fresh mark is false."
   (let ((font (cdr (assq param rtf-font-table))))
     ;; Some strange rtf documents have \f primitive without a declared
     ;; font table. We should a bit tolerant on this point.
-    (and font (rtf-set-font-charset (rtf-font-charset font)))
+    (when font 
+      (rtf-set-property rtf-char-props :family (rtf-font-name font))
+      (rtf-set-font-charset (rtf-font-charset font)))
     ))
 
 (rtf-define-control fs 24
-;  (rtf-set-property rtf-char-props 'font-size param))
-)
+  ;; Emacs expects a integer in 1/10 points, but PARAM is in
+  ;; half-points, so 5 is the correction factor.
+  (rtf-set-property rtf-char-props :height (* 5 param)))
 
 ;;;  File Table
 (defvar rtf-file-table nil)
