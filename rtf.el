@@ -171,8 +171,16 @@ properties and fresh mark is false."
   `(progn (insert ?{) ,@body (insert ?})))
 
 ;;;  Document Properties
+(unless (coding-system-p 'symbol)
+  (define-coding-system 'symbol
+    "Coding system for the symbol charset."
+    :mnemonic ??
+    :coding-type 'charset
+    :charset-list '(symbol)))
+
 (defconst rtf-font-charset-alist
   '((0   . cp1252)
+    (2   . symbol)
     (77  . mac-roman)
     (128 . cp932)
     (129 . cp949)
