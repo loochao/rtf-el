@@ -1071,6 +1071,18 @@ properties and fresh mark is false."
   (rtf-set-property rtf-display-props 'raise nil)
   (rtf-set-property rtf-display-props 'height nil))
 
+;; 
+(rtf-defvar rtf-visible-props (rtf-make-properties-stack) t
+  "Properties stack for invisible face attribute.")
+
+(defun rtf-apply-visible-properties (props len)
+  (dolist (p (copy-tree props))
+    (put-text-property (- (point) len) (point) (car p) (cadr p))))
+
+(rtf-define-control v 1
+  (rtf-toggle-property rtf-visible-props param 'invisible t nil)
+  (rtf-toggle-property rtf-visible-props param 'intangible t nil))
+
 
 ;;;  Section Formatting
 (defvar rtf-section-props (rtf-make-properties-stack))
@@ -1698,6 +1710,7 @@ properties and fresh mark is false."
   (rtf-push-properties rtf-display-props)
   (rtf-push-properties rtf-section-props)
   (rtf-push-properties rtf-paragraph-props)
+  (rtf-push-properties rtf-visible-props)
   (push (car rtf-none-unicode-bytes) rtf-none-unicode-bytes)
   (push (car rtf-coding-system-stack) rtf-coding-system-stack))
 
@@ -1706,6 +1719,7 @@ properties and fresh mark is false."
   (rtf-pop-properties rtf-display-props)
   (rtf-pop-properties rtf-section-props)
   (rtf-pop-properties rtf-paragraph-props)
+  (rtf-pop-properties rtf-visible-props)
   (pop rtf-none-unicode-bytes)
   (pop rtf-coding-system-stack))
 
