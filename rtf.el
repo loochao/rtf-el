@@ -1515,6 +1515,11 @@ properties and fresh mark is false."
 (defun rtf-insert-formatted (arg)
   (insert-and-inherit arg)
   (let ((len (and (stringp arg) (length arg))))
+    (and (rtf-fresh-properties-p rtf-visible-props)
+	 (rtf-apply-properties rtf-visible-props
+			       #'rtf-apply-visible-properties
+			       len))
+    
     (and (rtf-fresh-properties-p rtf-char-props)
 	 (rtf-apply-properties rtf-char-props
 			       #'rtf-add-char-properties
