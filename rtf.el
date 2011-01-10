@@ -186,6 +186,7 @@ properties and fresh mark is false."
     (129 . cp949)
     (134 . gb2312)
     (135 . cp950)
+    (136 . big5)
     (161 . cp1253)
     (162 . cp1254)
     (254 . cp437)))
@@ -204,7 +205,8 @@ properties and fresh mark is false."
   '((cp949  . 2)
     (cp932  . 2)
     (cp950  . 2)
-    (gb2312 . 2)))
+    (gb2312 . 2)
+    (big5   . 2)))
 
 (defvar rtf-default-lang nil)
 (make-variable-buffer-local 'rtf-default-lang)
@@ -440,7 +442,8 @@ properties and fresh mark is false."
 	(push (cons (rtf-font-num font) font) rtf-font-table)
 	(setq font (make-rtf-font))
 	(setq beg (point)))))
-  (setq rtf-font-table (nreverse rtf-font-table)))
+  (setq rtf-font-table (nreverse rtf-font-table))
+  (rtf-set-font rtf-default-font))
 
 (defun rtf-write-font-table (buffer)
   (let ((rtf-font-table (buffer-local-value 'rtf-font-table buffer)))
@@ -475,14 +478,15 @@ properties and fresh mark is false."
     (insert "\n")))
 
 (rtf-define-control f 0
-  ;; XXX: apply all properties of a font
-  (let ((font (cdr (assq param rtf-font-table))))
+  (rtf-set-font param))
+
+(defun rtf-set-font (num)
+  (let ((font (cdr (assq num rtf-font-table))))
     ;; Some strange rtf documents have \f primitive without a declared
     ;; font table. We should a bit tolerant on this point.
     (when font 
       (rtf-set-property rtf-char-props :family (rtf-font-name font))
-      (rtf-set-font-charset (rtf-font-charset font)))
-    ))
+      (rtf-set-font-charset (rtf-font-charset font)))))
 
 (rtf-define-control fs 24
   ;; Emacs expects a integer in 1/10 points, but PARAM is in
