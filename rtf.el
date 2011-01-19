@@ -367,13 +367,12 @@ properties and fresh mark is false."
     (#x500a . cp1252))
   "Mapping between language (locale) id and ANSI code page (coding system).")
 
-(defconst rtf-coding-system-spec
-  '((cp949  . 2)
-    (cp932  . 2)
-    (cp950  . 2)
-    (cp936  . 2)
-    (gb2312 . 2)
-    (big5   . 2)))
+(defun rtf-coding-system-dimension (name)
+  "Get maximum dimension of all charsets of coding system NAME."
+  (and name
+       (coding-system-p name)
+       (apply #'max (mapcar (lambda (cs) (charset-dimension cs)) 
+			    (coding-system-charset-list name)))))
 
 (defvar rtf-default-lang nil)
 (make-variable-buffer-local 'rtf-default-lang)
@@ -488,7 +487,7 @@ properties and fresh mark is false."
 ;;;  Special Characters and Formatting
 (defun rtf-insert-char-by-hex ()
   (let* ((cs    (car rtf-coding-system-stack))
-	 (bytes (cdr (assoc cs rtf-coding-system-spec))))
+	 (bytes (rtf-coding-system-dimension cs)))
     (rtf-insert-formatted
      (decode-coding-string
       (rtf-read-char-as-hex bytes)
