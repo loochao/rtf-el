@@ -189,6 +189,7 @@ properties and fresh mark is false."
     (136 . big5)
     (161 . cp1253)
     (162 . cp1254)
+    (238 . cp1250)
     (254 . cp437)))
 
 (defconst rtf-language-alist
