@@ -189,8 +189,14 @@ properties and fresh mark is false."
     (136 . big5)
     (161 . cp1253)
     (162 . cp1254)
+    (177 . cp1255)
+    (178 . cp1256)
+    (186 . cp1257)
+    (204 . cp1251)
+    (222 . cp874)
     (238 . cp1250)
-    (254 . cp437)))
+    (254 . cp437)
+    (255 . cp850)))
 
 (defconst rtf-language-alist
   '((#x0400 . nil)
@@ -653,7 +659,9 @@ properties and fresh mark is false."
     ;; font table. We should a bit tolerant on this point.
     (when font 
       (rtf-set-property rtf-char-props :family (rtf-font-name font))
-      (rtf-set-font-charset (rtf-font-charset font)))))
+      (let ((cpg (rtf-font-codepage font)))
+	(setcar rtf-coding-system-stack 
+		(if cpg cpg (cdr (assq num rtf-font-charset-alist))))))))
 
 (rtf-define-control fs 24
   ;; Emacs expects a integer in 1/10 points, but PARAM is in
@@ -1482,7 +1490,8 @@ properties and fresh mark is false."
   (setq rtf-default-lang param))
 
 (rtf-define-control lang 0
-  (rtf-set-language param))
+  ; (rtf-set-language param)
+  )
 
 
 ;;;  Bookmarks
