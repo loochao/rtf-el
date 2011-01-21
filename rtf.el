@@ -389,9 +389,6 @@ properties and fresh mark is false."
 (make-variable-buffer-local 'rtf-coding-system-stack)
 (put 'rtf-coding-system-stack 'permanent-local t)
 
-(defun rtf-set-font-charset (num)
-  (setcar rtf-coding-system-stack (cdr (assq num rtf-font-charset-alist))))
-
 (defun rtf-set-language (num)
   (setcar rtf-coding-system-stack (cdr (assq num rtf-language-alist))))
 
@@ -661,7 +658,9 @@ properties and fresh mark is false."
       (rtf-set-property rtf-char-props :family (rtf-font-name font))
       (let ((cpg (rtf-font-codepage font)))
 	(setcar rtf-coding-system-stack 
-		(if cpg cpg (cdr (assq num rtf-font-charset-alist))))))))
+		(if cpg
+		    (intern (format "cp%d" cpg)) 
+		  (cdr (assq (rtf-font-charset font) rtf-font-charset-alist))))))))
 
 (rtf-define-control fs 24
   ;; Emacs expects a integer in 1/10 points, but PARAM is in
