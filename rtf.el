@@ -381,7 +381,7 @@ properties and fresh mark is false."
   "Get maximum dimension of all charsets of coding system NAME."
   (and name
        (coding-system-p name)
-       (apply #'max (mapcar #'charset-dimenstion 
+       (apply #'max (mapcar #'charset-dimension
 			    (coding-system-charset-list name)))))
 
 (defvar rtf-default-lang nil)
